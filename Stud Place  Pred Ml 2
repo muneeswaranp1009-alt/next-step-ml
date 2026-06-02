@@ -1,0 +1,84 @@
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score 
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+
+
+def train_placement_model():
+    try:
+        stud_data = pd.read_csv(r"C:\May\1st Week\3rd Day\students_data.csv")
+        
+        stud_data["Placement"] = stud_data["Placement"].map({"Yes": 1, "No": 0})
+        stud_data["Internship"] = stud_data["Internship"].map({"Yes": 1, "No": 0})
+        
+        print("\n..........................Coverted Data Set.......................\n")
+        print(stud_data.head())
+        
+        x = stud_data[["CGPA", "Aptitude", "Communication", "Projects", "Internship"]]
+        y = stud_data["Placement"]
+        
+        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=7)
+        
+        lr_model = LogisticRegression()
+        lr_model.fit(x_train, y_train)
+        
+        prediction = lr_model.predict(x_test)
+        print("\n..........................Prediction Values.......................\n")
+        print(prediction)
+        
+        accuracy = accuracy_score(y_test, prediction)
+        print("\n..........................Accuracy Score.......................")
+        print(f"Accuracy {accuracy*100:.2f}%")
+        
+        classification = classification_report(y_test, prediction,target_names=["Not placed", "Placed"])
+        print("\n.......................Classification Report.......................")
+        print("\n")
+        print(classification)
+        
+        confusion = confusion_matrix(y_test, prediction)
+        print("\n.......................Confusion Matrix...........................")
+        print("\n")
+        print(confusion)
+        
+        return lr_model
+    
+    except FileNotFoundError:
+        print("\n Error:Csv file path is wrong ,please check file path")
+        return None
+    except Exception as e:
+        print(f"\n Error:Something Went wrong during training:{e}")
+        return None
+    
+
+def predict_new_student(trained_engine):
+    if  trained_engine is None:
+        print("\nModel is not run properly")
+        return 
+    try:
+        new_stud = input("\nEnter the student details (CGPA, Aptitude, Communication, Projects, Internship) separated by commas:")
+        after_data = [float(x.strip()) for x in new_stud.split(",")]
+        if len(after_data) != 5:
+            print("Please enter exactly 5 values.")
+            return
+        new_stud = pd.DataFrame([after_data], columns=["CGPA", "Aptitude", "Communication", "Projects", "Internship"])
+        
+        result = trained_engine.predict(new_stud)
+        if result[0] == 1:
+            print("The student is likely to be placed")
+        else:
+            print("The student is not likely to be placed")
+            
+    except ValueError:
+        print("\nFloat Error")
+    except Exception as e:
+        print(f"\nInput Handling error:{e}")
+        
+if __name__ == "__main__":
+        
+        model_instance = train_placement_model()
+        predict_new_student(model_instance)
+        
+        
